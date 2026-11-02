@@ -8,7 +8,7 @@ FlClash 链式配置生成器：将机场作为第一跳，把已有的 Shadowso
 
 打开 [Chain Studio](https://unofn.github.io/flclash-chain-generator/)，选择机场、填写落地节点并下载脚本。配置在浏览器本地处理，无需上传订阅。
 
-在 FlClash 中打开 **工具 → 进阶配置 → 脚本 → 添加 → 从文件导入**，然后在订阅的 **扩展 → 脚本** 中选择并应用。在 AI 策略组选择落地节点，在「链式入口（机场）」组选择第一跳。
+在 FlClash 中打开 **工具 → 进阶配置 → 脚本 → 添加 → 从文件导入**，然后在订阅的 **扩展 → 脚本** 中选择并应用。在 AI 策略组选择落地节点，在「链式入口（机场）」组选择第一跳。应用后可访问 [Net.Coffee IP 分流测试](https://ip.net.coffee/)，检查目标服务的出口 IP。
 
 网页默认保留订阅 DNS；TAGMeta 可选启用 DNS 分流和节点 DNS 修正。启用后国内 DNS 直连，默认境外 DNS 经机场前置组，并清空 `fallback`。
 
