@@ -1,53 +1,65 @@
 # Chain Studio
 
-一个支持网页和本地命令行的 FlClash 链式配置生成器。它将机场作为第一跳，将你已有的 Shadowsocks 2022 节点作为落地出口，加入订阅的 AI 策略组。网页适合填写后直接下载；命令行适合用本地配置重复生成并维护固定文件路径。
+FlClash 链式配置生成器：将机场作为第一跳，把已有的 Shadowsocks 2022 节点加入订阅的 AI 策略组。
 
-## 支持的订阅
-
-目前提供 **TAGMeta（TAG）** 和 **Nexitally（奶昔）** 的订阅预设，预设填写对应的 AI 策略组和机场前置组名称。订阅更新或组名变化后，请以实际配置为准。其他订阅可以尝试自动识别或自定义策略组，兼容性未逐一验证。
+支持 **TAGMeta（TAG）**、**Nexitally（奶昔）** 预设，也可以自定义策略组。生成的脚本保留机场原有分流规则；实际覆盖哪些服务取决于机场订阅。
 
 ## 网页生成
 
-在线使用：[打开 Chain Studio](https://unofn.github.io/flclash-chain-generator/)（配置在浏览器本地处理），也可以下载后离线打开。命令行方式见[本地命令行生成](#本地命令行生成)。
+打开 [Chain Studio](https://unofn.github.io/flclash-chain-generator/)，选择机场、填写落地节点并下载脚本。配置在浏览器本地处理，无需上传订阅。
 
-1. 下载此仓库（GitHub 上选择 **Code → Download ZIP**），解压后用浏览器打开 `index.html`。无需安装或启动服务器。
-2. 选择机场预设，或填写 AI 策略组及机场前置组的准确名称；留空时尝试自动识别。至少填写一个已有的 SS 2022 落地节点并下载脚本。
-3. FlClash → 工具 → 进阶配置 → 脚本 → 添加 → 从文件导入下载的脚本。在对应订阅的「扩展 → 脚本」中选择并应用。
-4. 在 AI 策略组选择 `链式落地 · 节点名称`，在 `链式入口（机场）` 策略组选择第一跳。检查实际选择及目标服务的出口。
+在 FlClash 中打开 **工具 → 进阶配置 → 脚本 → 添加 → 从文件导入**，然后在订阅的 **扩展 → 脚本** 中选择并应用。在 AI 策略组选择落地节点，在「链式入口（机场）」组选择第一跳。
 
-脚本按照当前订阅动态生成策略组，订阅更新后重新应用时会使用更新后的节点与规则。节点凭据或策略组名称变更时，需要重新生成并导入脚本。
-
-## 工作方式与限制
-
-- 页面不请求网络、不上传或持久化输入；生成完全在浏览器完成。浏览器自身的表单自动填充、下载历史等行为由浏览器控制。
-- **下载的脚本包含节点密码**。请勿公开分享、提交 Git 或发给无权使用该节点的人；使用后自行妥善保管或删除。
-- 需要已有 SS 2022 节点：支持 `2022-blake3-aes-128-gcm` 和 `2022-blake3-aes-256-gcm`，密码分别为标准 Base64 编码的 16、32 字节密钥。工具不提供或部署节点，也不支持带身份密钥的多用户 SS 2022 密码格式。
-- 需要订阅已有 `select` 类型的 AI 策略组。自动识别基于名称；机场命名不常见时请填写准确名称。节点默认放在 AI 组前面，已有的客户端选择可能保留，请应用后核对。
-- 不增加 AI 域名规则，服务覆盖范围由机场规则决定；默认保留订阅的 DNS；TUN、WebRTC 按客户端设置运行，出口不一定一致。TAGMeta 预设提供可选的 DNS 分流及节点 DNS 修正，默认关闭；启用后国内 DNS 直连，默认境外 DNS 走指定前置组，并清空 fallback。
-- 脚本会新建「链式入口（机场）」策略组，名称与订阅已有组冲突时会报错。为减少代理循环，显式指定的前置组不能直接或间接引用 AI 策略组或包含全部本地代理；仍需自行核对复杂订阅及最终出口。
-- 本工具从 FlClash 0.9.2 / mihomo 1.19.33 的使用场景提取；其他版本和订阅的兼容性未逐一验证。代理本身可能不支持 UDP，脚本开启 UDP 不代表链路或 WebRTC 一定可用。
+网页默认保留订阅 DNS；TAGMeta 可选启用 DNS 分流和节点 DNS 修正。启用后国内 DNS 直连，默认境外 DNS 经机场前置组，并清空 `fallback`。
 
 ## 本地命令行生成
 
-命令行生成器可读取保存在仓库外的本地配置和凭据，向指定目录生成兼容原有节点名称的脚本，适合用软链接供 FlClash 读取。配置示例见 [local-config.example.json](local-config.example.json)；请将副本和凭据存放在 Git 忽略的本地目录，并根据实际情况修改。凭据文件使用 `server`、`port`、`cipher`、`password` 字段，本地命令行兼容生成器支持 16 字节 Base64 密钥的 `2022-blake3-aes-128-gcm`。
+需要 Node.js 18 或更新版本。命令行适合用本地配置重复生成脚本，或将输出文件固定在供 FlClash 软链接读取的目录。
 
 ```sh
-node scripts/generate-local.mjs --config /path/to/local-config.json --output-dir /path/to/output --airport all
+git clone https://github.com/unofn/flclash-chain-generator.git
+cd flclash-chain-generator
+
+mkdir -p "$HOME/.chain-studio"
+cp local-config.example.json "$HOME/.chain-studio/local-config.json"
 ```
 
-`--airport` 可指定配置中的一个机场，`all` 批量生成（跳过 `includeInAll: false` 的预设）；单个机场可用 `--ai-group`、`--upstream-group` 覆盖策略组名。每次生成会原子替换指定目录下的同名文件；若 FlClash 软链接指向它们，后续重新应用订阅时将读取新脚本。运行前确认输出目录，生成文件包含密钥。
+修改 `local-config.json` 中的节点名称、机场策略组和输出文件名。示例包含两个节点，其 `credentials` 分别指向配置文件同目录下的 `exit-a.json` 和 `exit-b.json`；请创建这两个文件，或修改路径。每个凭据文件的格式如下：
 
-本地配置的 `legacyNames` 用于清理旧脚本节点，`splitDns` 和 `proxyServerNameserver` 控制 TAG DNS 分流与特定自引用节点 DNS 修正。网页与本地命令行使用不同的节点命名规则；如需保留已有 FlClash 选择及软链接，使用本地命令行生成器。
+```json
+{
+  "server": "你的服务器地址",
+  "port": 443,
+  "cipher": "2022-blake3-aes-128-gcm",
+  "password": "你的 Base64 密钥"
+}
+```
 
-## 开发与测试
+```sh
+node scripts/generate-local.mjs \
+  --config "$HOME/.chain-studio/local-config.json" \
+  --output-dir "$HOME/.chain-studio/output" \
+  --airport all
+```
 
-`index.html` 是构建好的独立文件。修改 `app.js`、`styles.css` 或 `index.template.html` 后，使用 Node.js 18 或更新版本重新构建并测试：
+将 `--output-dir` 换成实际输出目录；`--airport` 可指定配置中的单个机场（如 `tagmeta` 或 `nexitally`），`all` 生成所有未排除的预设。同名文件会被替换；FlClash 使用软链接时，重新应用订阅后读取更新后的脚本。更多参数可运行 `node scripts/generate-local.mjs --help` 查看。
+
+[配置示例](local-config.example.json)中的 TAGMeta 预设启用了 DNS 分流；按需修改 `splitDns` 和 `proxyServerNameserver`。网页与命令行使用不同的节点命名规则，如需保留已有节点名称和软链接，请使用命令行。
+
+## 注意事项
+
+- **生成的脚本包含节点密码**，请妥善保管，不要提交到 Git 或公开分享。命令行的本地配置和凭据也应存放在仓库外。
+- 需要已有 `select` 类型的 AI 策略组。若自动识别不到，请填写准确组名；应用后检查实际选择和出口。
+- 网页支持 SS 2022 的 128 位和 256 位 AES 密钥；命令行目前支持 `2022-blake3-aes-128-gcm`。不支持带身份密钥的多用户密码格式。
+- DNS、TUN 和 WebRTC 的实际路径还受订阅和客户端设置影响，出口不一定一致。
+
+## 开发
+
+修改网页源文件后重新构建，并运行测试：
 
 ```sh
 node build.mjs
 node --test test.cjs local-override.test.cjs local-generator.test.cjs
 ```
 
-## 许可证
-
-[MIT](LICENSE)
+[MIT License](LICENSE)
