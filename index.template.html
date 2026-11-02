@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+  <title>Chain Studio · FlClash 链式配置</title>
+  <style>
+__STYLES__
+</style>
+  <script defer>
+__SCRIPT__
+</script>
+</head>
+<body>
+<header class="topbar"><div class="brand"><span class="brand-icon">↗</span><span>CHAIN STUDIO <small>FOR FLCLASH</small></span></div><span class="top-note"><span class="dot"></span> 仅在本地生成</span></header>
+<main>
+  <div class="intro"><div><div class="eyebrow"><span>工具 / 01</span> FLCLASH 脚本生成器</div><h1>把 AI 流量，<br><em>接到你的落地节点。</em></h1><p>保留机场原有分流规则，为 AI 策略组添加链式出口。填好配置，下载脚本，导入 FlClash 即可。</p></div><div class="diagram" aria-label="链路：设备，经机场，到落地节点，再到 AI 服务"><span>你的设备</span><b>→</b><span>机场节点</span><b>→</b><span class="highlight">落地节点</span><b>→</b><span>AI 服务</span></div></div>
+  <div class="layout"><form id="generator" novalidate><section class="card"><div class="section-head"><span class="number">01</span><div><h2>选择机场配置</h2><p>预设只填写策略组名称，订阅内容无需上传。</p></div></div><div class="fields"><label>机场预设<select id="preset"><option value="auto">通用 · 自动识别 AI 策略组</option><option value="tagmeta">TAGMeta</option><option value="nexitally">Nexitally</option><option value="custom">自定义策略组</option></select></label><div class="two"><label>AI 策略组名称 <span class="optional">选填</span><input id="aiGroup" placeholder="留空自动识别" autocomplete="off"><small>需要是手动选择（select）类型。</small></label><label>机场前置组名称 <span class="optional">选填</span><input id="upstreamGroup" placeholder="留空自动选择" autocomplete="off"><small>用于选择链路的第一跳。</small></label></div></div></section>
+<section class="card"><div class="section-head"><span class="number">02</span><div><h2>添加落地节点</h2><p>填写你已有的 Shadowsocks 2022 节点。节点凭据只用于本地生成。</p></div></div><div id="nodes"></div><button type="button" class="add" id="addNode">＋ 添加另一个节点</button></section>
+<section class="card last-card"><div class="section-head"><span class="number">03</span><div><h2>生成脚本</h2><p>检查配置后，下载并导入 FlClash。</p></div></div><div class="notice"><strong>请妥善保管生成文件</strong><span>脚本包含节点密码；分享脚本也会分享节点访问权限。请勿提交到 Git 或公开发送。</span></div><div id="error" class="error" role="alert" hidden></div><button class="primary" type="submit">生成并下载脚本 <span>↗</span></button><p class="footnote">不会读取或上传订阅。关闭页面后，表单不会被此工具保存。</p></section></form>
+<aside><div class="side-title">使用指南 <span>↗</span></div><ol class="steps"><li><b>下载脚本</b><p>填写至少一个落地节点后生成。</p></li><li><b>导入 FlClash</b><p>工具 → 进阶配置 → 脚本 → 添加 → 从文件导入。</p></li><li><b>应用到订阅</b><p>在订阅的「扩展 → 脚本」中选择它，并立即应用。</p></li><li><b>选择链式出口</b><p>在 AI 策略组选落地节点，在「链式入口（机场）」组选第一跳。</p></li></ol><div class="side-divider"></div><h3>使用前了解</h3><p>仅已有 AI 策略组的订阅可用；AI 服务覆盖范围由机场规则决定。</p><p>DNS、TUN 和 WebRTC 流量沿用你的订阅及客户端设置，出口不一定相同。</p><p>生成的落地节点默认排在 AI 组前面。应用后请检查实际选择与出口。</p></aside></div>
+<footer><span>CHAIN STUDIO</span><span>本地生成 · 你的配置由你掌控</span></footer>
+</main>
+<template id="nodeTemplate"><div class="node"><div class="node-head"><span>落地节点 <b class="node-index"></b></span><button class="remove" type="button">移除</button></div><div class="fields"><label>节点名称<input name="name" placeholder="例如：我的落地节点" maxlength="80" required autocomplete="off"></label><div class="two"><label>服务器地址<input name="server" placeholder="例如：example.com" required autocomplete="off" spellcheck="false"></label><label>端口<input name="port" type="number" min="1" max="65535" placeholder="例如：443" required></label></div><label>加密方式<select name="cipher"><option value="2022-blake3-aes-128-gcm">2022-blake3-aes-128-gcm</option><option value="2022-blake3-aes-256-gcm">2022-blake3-aes-256-gcm</option></select></label><label>密码<input name="password" type="password" placeholder="SS 2022 Base64 密钥" required autocomplete="new-password" spellcheck="false"><small>128 位密钥为 16 字节，256 位密钥为 32 字节，均须为标准 Base64。</small></label></div></div></template>
+</body></html>
