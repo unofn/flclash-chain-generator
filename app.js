@@ -104,6 +104,30 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { makeScri
 if (typeof document !== 'undefined') {
   const $ = id => document.getElementById(id);
   const nodes = $('nodes');
+  function showMode(mode) {
+    const web = mode === 'web';
+    $('webPanel').hidden = !web;
+    $('cliPanel').hidden = web;
+    $('webMode').classList.toggle('active', web);
+    $('cliMode').classList.toggle('active', !web);
+    $('webMode').setAttribute('aria-pressed', String(web));
+    $('cliMode').setAttribute('aria-pressed', String(!web));
+  }
+  $('webMode').addEventListener('click', () => showMode('web'));
+  $('cliMode').addEventListener('click', () => showMode('cli'));
+  for (const button of document.querySelectorAll('[data-copy]')) {
+    button.addEventListener('click', async () => {
+      const command = $(button.dataset.copy).textContent;
+      try {
+        await navigator.clipboard.writeText(command);
+        $('copyStatus').textContent = '命令已复制。';
+        button.textContent = '已复制';
+        setTimeout(() => { button.textContent = '复制'; }, 2000);
+      } catch {
+        $('copyStatus').textContent = '无法自动复制，请手动选中命令复制。';
+      }
+    });
+  }
   const renderIndices = () => [...nodes.children].forEach((node, i) => {
     node.querySelector('.node-index').textContent = String(i + 1).padStart(2, '0');
     node.querySelector('.remove').disabled = nodes.children.length === 1;
