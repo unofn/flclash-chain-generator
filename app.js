@@ -46,6 +46,22 @@ function applyOverride(config, options) {
       ? { ...group, proxies: [...options.nodes.map(n => n.name), ...(group.proxies || []).filter(n => !oldNames.has(n) && !names.has(n))] }
       : group),
   ];
+  if (options.tagDns) {
+    if (!options.upstreamGroup || !byName.has(options.upstreamGroup)) throw new Error('TAG DNS 分流需要存在的前置组');
+    const existingDns = config.dns || {};
+    const resolvers = existingDns['proxy-server-nameserver'];
+    const fixedResolvers = Array.isArray(resolvers) && ['0.0.0.0:7874', '127.0.0.1:7874'].includes(existingDns.listen)
+      ? resolvers.flatMap(r => r === 'udp://127.0.0.1:7874' ? ['https://223.5.5.5/dns-query#DIRECT'] : [r])
+      : resolvers;
+    config.dns = {
+      ...existingDns,
+      ...(fixedResolvers === undefined ? {} : { 'proxy-server-nameserver': fixedResolvers }),
+      enable: true,
+      nameserver: ['https://1.1.1.1/dns-query#' + options.upstreamGroup],
+      fallback: [],
+      'nameserver-policy': { ...(existingDns['nameserver-policy'] || {}), 'geosite:cn': ['https://223.5.5.5/dns-query#DIRECT', 'https://doh.pub/dns-query#DIRECT'] },
+    };
+  }
   return config;
 }
 
@@ -53,6 +69,8 @@ function makeScript(input) {
   const clean = value => String(value || '').trim();
   const aiGroup = clean(input.aiGroup);
   const upstreamGroup = clean(input.upstreamGroup);
+  const tagDns = input.tagDns === true;
+  if (tagDns && !upstreamGroup) throw new Error('启用 TAG DNS 分流时必须指定机场前置组');
   if (!Array.isArray(input.nodes) || !input.nodes.length) throw new Error('请至少填写一个落地节点');
   const seen = new Set();
   const nodes = input.nodes.map((entry, index) => {
@@ -75,7 +93,7 @@ function makeScript(input) {
     } catch { throw new Error(`${label}：密钥必须是 ${bytes} 字节的标准 Base64`); }
     return { name: '链式落地 · ' + name, type: 'ss', server, port, cipher, password, udp: true };
   });
-  const options = JSON.stringify({ aiGroup, upstreamGroup, nodes }, null, 2).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+  const options = JSON.stringify({ aiGroup, upstreamGroup, nodes, tagDns }, null, 2).replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
   return '// 此文件包含节点凭据，请妥善保管，不要公开分享。\n' +
     'const chainOptions = ' + options + ';\n' +
     'const applyChainOverride = ' + applyOverride.toString() + ';\n' +
@@ -100,11 +118,13 @@ if (typeof document !== 'undefined') {
   $('preset').addEventListener('change', event => {
     const preset = { tagmeta: ['🧲 海外AI', '🙂 TAGSS'], nexitally: ['AI', 'Proxies'], auto: ['', ''], custom: ['', ''] }[event.target.value];
     $('aiGroup').value = preset[0]; $('upstreamGroup').value = preset[1];
+    $('tagDnsOption').hidden = event.target.value !== 'tagmeta';
+    if (event.target.value !== 'tagmeta') $('tagDns').checked = false;
   });
   $('generator').addEventListener('submit', event => {
     event.preventDefault();
     $('error').hidden = true;
-    const input = { aiGroup: $('aiGroup').value, upstreamGroup: $('upstreamGroup').value,
+    const input = { aiGroup: $('aiGroup').value, upstreamGroup: $('upstreamGroup').value, tagDns: $('tagDns').checked,
       nodes: [...nodes.children].map(node => Object.fromEntries([...node.querySelectorAll('[name]')].map(field => [field.name, field.value]))) };
     try {
       const script = makeScript(input);
