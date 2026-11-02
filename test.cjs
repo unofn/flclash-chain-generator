@@ -54,3 +54,20 @@ test('values are serialized as data rather than executable code', () => {
   const result = execute(makeScript({ ...input, nodes: [special] }), subscription());
   assert.equal(result.proxies.at(-1).name, '链式落地 · ' + special.name);
 });
+
+
+test('TAG DNS is opt-in, splits DNS and fixes only self-referential proxy DNS', () => {
+  const source = subscription();
+  source.dns = { listen: '127.0.0.1:7874', nameserver: ['old'], fallback: ['old'],
+    'proxy-server-nameserver': ['udp://127.0.0.1:7874', '223.6.6.6'],
+    'nameserver-policy': { '+.example.test': ['original'] } };
+  const result = execute(makeScript({ ...input, tagDns: true }), structuredClone(source));
+  assert.deepEqual(result.dns.nameserver, ['https://1.1.1.1/dns-query#Proxies']);
+  assert.deepEqual(result.dns.fallback, []);
+  assert.deepEqual(result.dns['proxy-server-nameserver'], ['https://223.5.5.5/dns-query#DIRECT', '223.6.6.6']);
+  assert.deepEqual(result.dns['nameserver-policy']['+.example.test'], ['original']);
+  assert.deepEqual(result.dns['nameserver-policy']['geosite:cn'], ['https://223.5.5.5/dns-query#DIRECT', 'https://doh.pub/dns-query#DIRECT']);
+  assert.deepEqual(execute(makeScript({ ...input, tagDns: true }), structuredClone(result)), result);
+  assert.deepEqual(execute(makeScript(input), structuredClone(source)).dns, source.dns);
+  assert.throws(() => makeScript({ ...input, tagDns: true, upstreamGroup: '' }), /前置组/);
+});
