@@ -4,6 +4,8 @@
 
 ## 使用
 
+在线使用：[打开 Chain Studio](https://unofn.github.io/flclash-chain-generator/)（配置在浏览器本地处理）。
+
 1. 下载此仓库（GitHub 上选择 **Code → Download ZIP**），解压后用浏览器打开 `index.html`。无需安装或启动服务器。
 2. 选择机场预设，或填写 AI 策略组及机场前置组的准确名称；留空时尝试自动识别。至少填写一个已有的 SS 2022 落地节点并下载脚本。
 3. FlClash → 工具 → 进阶配置 → 脚本 → 添加 → 从文件导入下载的脚本。在对应订阅的「扩展 → 脚本」中选择并应用。
